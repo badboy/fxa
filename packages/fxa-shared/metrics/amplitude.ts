@@ -176,6 +176,10 @@ function mapSubscriptionChangeEventProperties(
       properties['previous_product_id'] = data.previousProductId;
     }
 
+    if (data.subscriptionId) {
+      properties['subscription_id'] = data.subscriptionId;
+    }
+
     return properties;
   }
 
@@ -197,6 +201,10 @@ function mapSubscriptionPaymentEventProperties(
 
     if (data.checkoutType) {
       properties['checkout_type'] = data.checkoutType;
+    }
+
+    if (data.subscribed_plan_ids) {
+      properties['subscribed_plan_ids'] = data.subscribed_plan_ids;
     }
 
     if (data.other) {

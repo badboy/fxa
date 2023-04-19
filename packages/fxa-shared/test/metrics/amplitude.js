@@ -488,21 +488,36 @@ describe('metrics/amplitude:', () => {
       assert.isTrue(result);
     });
 
-    it('success - if event_type is `fxa_pay_setup - *` and language is provided', () => {
+    it('success - if event_type is `fxa_pay_setup - *` and language/product/plan/checkoutType is provided', () => {
       const event = {
         ...minimumEvent,
         event_type: 'fxa_pay_setup - view',
         language: 'en',
+        event_properties: {
+          ...minimumEvent.event_properties,
+          product_id: 'product',
+          plan_id: 'plan',
+          checkout_type: 'without-account',
+        },
       };
       const result = amplitude.validate(event);
       assert.isTrue(result);
     });
 
-    it('success - if event_type is `fxa_pay_subscription_change - *` and language is provided', () => {
+    it('success - if event_type is `fxa_pay_subscription_change - *` and language/product/plan is provided', () => {
       const event = {
         ...minimumEvent,
         event_type: 'fxa_pay_subscription_change - view',
         language: 'en',
+        event_properties: {
+          ...minimumEvent.event_properties,
+          product_id: 'product',
+          plan_id: 'plan',
+          previous_plan_id: 'oldPlan',
+          previous_product_id: 'oldProduct',
+          subscription_id: 'subId',
+          payment_provider: 'stripe',
+        },
       };
       const result = amplitude.validate(event);
       assert.isTrue(result);
@@ -537,24 +552,6 @@ describe('metrics/amplitude:', () => {
     it('errors - event_type required', () => {
       const event = {
         ...minimumEvent,
-      };
-      delete event.event_type;
-      try {
-        amplitude.validate(event);
-        assert.fail('Validate is expected to fail');
-      } catch (err) {
-        assert.isTrue(err instanceof Error);
-        assert.equal(
-          err.message,
-          `Invalid data: event must have required property 'language', event must match "then" schema, event must have required property 'event_type'`
-        );
-      }
-    });
-
-    it('errors - event_type required and language is provided', () => {
-      const event = {
-        ...minimumEvent,
-        language: 'en-US',
       };
       delete event.event_type;
       try {
@@ -623,6 +620,12 @@ describe('metrics/amplitude:', () => {
       const event = {
         ...minimumEvent,
         event_type: 'fxa_pay_setup - view',
+        event_properties: {
+          ...minimumEvent.event_properties,
+          product_id: 'product',
+          plan_id: 'plan',
+          checkout_type: 'without-account',
+        },
       };
       try {
         amplitude.validate(event);
@@ -640,6 +643,15 @@ describe('metrics/amplitude:', () => {
       const event = {
         ...minimumEvent,
         event_type: 'fxa_pay_subscription_change - view',
+        event_properties: {
+          ...minimumEvent.event_properties,
+          product_id: 'product',
+          plan_id: 'plan',
+          previous_plan_id: 'oldPlan',
+          previous_product_id: 'oldProduct',
+          subscription_id: 'subId',
+          payment_provider: 'stripe',
+        },
       };
       try {
         amplitude.validate(event);
@@ -691,6 +703,12 @@ describe('metrics/amplitude:', () => {
       const event = {
         ...minimumEvent,
         event_type: 'fxa_pay_setup - view',
+        event_properties: {
+          ...minimumEvent.event_properties,
+          product_id: 'product',
+          plan_id: 'plan',
+          checkout_type: 'without-account',
+        },
       };
       delete event.op;
       try {

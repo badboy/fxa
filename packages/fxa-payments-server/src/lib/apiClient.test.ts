@@ -266,6 +266,7 @@ describe('API requests', () => {
       paymentProvider: params.paymentProvider,
       previousPlanId: params.previousPlanId,
       previousProductId: params.previousProductId,
+      subscriptionId: params.subscriptionId,
     };
 
     it('PUT {auth-server}/v1/oauth/subscriptions/active', async () => {

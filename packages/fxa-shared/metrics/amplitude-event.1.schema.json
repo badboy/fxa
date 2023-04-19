@@ -102,6 +102,36 @@
           "description": "Product ID of a subscription.",
           "type": "string",
           "maxLength": 128
+        },
+        "promotion_code": {
+          "description": "The Stripe customer-facing promotion code applied, if any.",
+          "type": "string"
+        },
+        "payment_provider": {
+          "description": "The third party service ultimately processing a user’s payments (i.e. one of: Stripe, PayPal, Google or Apple).",
+          "type": "string",
+          "enum": ["stripe", "paypal", "google", "apple"]
+        },
+        "checkout_type": {
+          "description": "Whether the checkout flow is for new users or existing users. One of “with-account” or “without-account”",
+          "type": "string",
+          "enum": ["with-account", "without-account"]
+        },
+        "previous_plan_id": {
+          "description": "The Stripe price_* or plan_* ID for the subscription the user currently has prior to the change",
+          "type": "string"
+        },
+        "previous_product_id": {
+          "description": "The Stripe product_* ID for the subscription the user currently has prior to the change",
+          "type": "string"
+        },
+        "subscribed_plan_ids": {
+          "description": "Comma-separated list of Stripe price/plan IDs the user is already subscribed to before creating a new subscription",
+          "type": "string"
+        },
+        "subscription_id": {
+          "description": "The Stripe subscription_* ID for the subscription being updated",
+          "type": "string"
         }
       }
     },
@@ -184,11 +214,19 @@
     "event_properties",
     "user_properties"
   ],
-  "anyOf": [{ "required": ["user_id"] }, { "required": ["device_id"] }],
+  "anyOf": [
+    {
+      "required": ["user_id"]
+    },
+    {
+      "required": ["device_id"]
+    }
+  ],
   "allOf": [
     {
       "if": {
-        "$comment": "For event_type's matching the pattern below, make language a required field",
+        "$comment": "For event_type's matching the pattern below, make following fields required",
+        "required": ["event_type"],
         "properties": {
           "event_type": {
             "type": "string",
@@ -197,7 +235,72 @@
         }
       },
       "then": {
-        "required": ["language"]
+        "required": ["language"],
+        "properties": {
+          "user_properties": {
+            "required": ["flow_id"]
+          },
+          "event_properties": {
+            "required": ["plan_id", "product_id"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "$comment": "For event_type's matching the pattern below, make following fields required",
+        "required": ["event_type"],
+        "properties": {
+          "event_type": {
+            "type": "string",
+            "pattern": "^fxa_pay_setup -"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "event_properties": {
+            "required": ["checkout_type"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "$comment": "For event_type's matching the pattern below, make following fields required",
+        "required": ["event_type"],
+        "properties": {
+          "event_type": {
+            "type": "string",
+            "pattern": "^fxa_pay_setup - submit|fxa_pay_setup - success|fxa_pay_setup - fail"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "event_properties": {
+            "required": ["payment_provider"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "$comment": "For event_type's matching the pattern below, make following fields required",
+        "required": ["event_type"],
+        "properties": {
+          "event_type": {
+            "type": "string",
+            "pattern": "^fxa_pay_subscription_change -"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "event_properties": {
+            "required": ["previous_plan_id", "previous_product_id", "subscription_id", "payment_provider"]
+          }
+        }
       }
     }
   ]

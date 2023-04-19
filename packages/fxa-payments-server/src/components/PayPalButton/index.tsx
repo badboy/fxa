@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom';
 
 import { Localized } from '@fluent/react';
 import * as apiClient from '../../lib/apiClient';
-import { Customer, Plan } from '../../store/types';
+import { Customer, Plan, Profile } from '../../store/types';
 import { SubscriptionCreateAuthServerAPIs } from '../../routes/Product/SubscriptionCreate';
 import { PaymentUpdateAuthServerAPIs } from '../../routes/Subscriptions/PaymentUpdateForm';
 
@@ -19,6 +19,7 @@ declare var paypal: {
 
 export type PaypalButtonProps = {
   customer: Customer | null;
+  profile: Profile | null;
   disabled: boolean;
   idempotencyKey: string;
   refreshSubmitNonce: () => void;
@@ -55,6 +56,7 @@ export const PaypalButtonBase =
 
 export const PaypalButton = ({
   customer,
+  profile,
   disabled,
   idempotencyKey,
   refreshSubmitNonce,
@@ -129,6 +131,7 @@ export const PaypalButton = ({
             productId,
             token,
             promotionCode,
+            profile,
           });
         } else {
           await apiUpdateBillingAgreement({

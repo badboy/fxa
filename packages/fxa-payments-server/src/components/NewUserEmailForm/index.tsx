@@ -14,6 +14,7 @@ import './index.scss';
 import * as Amplitude from '../../lib/amplitude';
 import { useCallbackOnce } from '../../lib/hooks';
 import { apiFetchAccountStatus } from '../../lib/apiClient';
+import { CheckoutType, Plan } from 'fxa-shared/subscriptions/types';
 
 export type NewUserEmailFormProps = {
   getString?: (id: string) => string;
@@ -28,7 +29,7 @@ export type NewUserEmailFormProps = {
   onToggleNewsletterCheckbox: () => void;
   validatorInitialState?: ValidatorState;
   validatorMiddlewareReducer?: ValidatorMiddlewareReducer;
-  selectedPlan: any;
+  selectedPlan: Plan;
 };
 
 export const NewUserEmailForm = ({
@@ -51,7 +52,7 @@ export const NewUserEmailForm = ({
 
   const [emailInputState, setEmailInputState] = useState<string>();
 
-  selectedPlan.checkoutType = 'without-account';
+  selectedPlan.checkoutType = CheckoutType.WITHOUT_ACCOUNT;
 
   const onFormMounted = useCallback(
     () => Amplitude.createAccountMounted(selectedPlan),

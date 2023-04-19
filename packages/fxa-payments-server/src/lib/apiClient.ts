@@ -16,6 +16,8 @@ import {
   SubsequentInvoicePreview,
 } from 'fxa-shared/dto/auth/payments/invoice';
 import { CouponDetails } from 'fxa-shared/dto/auth/payments/coupon';
+import customer from './customer';
+import { CheckoutType } from 'fxa-shared/subscriptions/types';
 
 // TODO: Use a better type here
 export interface APIFetchOptions {
@@ -187,6 +189,7 @@ export async function apiUpdateSubscriptionPlan(params: {
     paymentProvider,
     previousPlanId,
     previousProductId,
+    subscriptionId,
   };
   try {
     Amplitude.updateSubscriptionPlan_PENDING(metricsOptions);
@@ -297,6 +300,7 @@ export async function apiCapturePaypalPayment(params: {
   productId: string;
   token?: string;
   promotionCode?: string;
+  profile?: Profile;
 }): Promise<{
   sourceCountry: string;
   subscription: Subscription;
@@ -306,6 +310,9 @@ export async function apiCapturePaypalPayment(params: {
     productId: params.productId,
     paymentProvider: 'paypal',
     promotionCode: params.promotionCode,
+    checkoutType: params.profile
+      ? CheckoutType.WITH_ACCOUNT
+      : CheckoutType.WITHOUT_ACCOUNT,
   };
   Amplitude.createSubscriptionWithPaymentMethod_PENDING(metricsOptions);
   try {
@@ -338,6 +345,7 @@ export async function apiCreateSubscriptionWithPaymentMethod(params: {
   productId: string;
   paymentMethodId?: string;
   promotionCode?: string;
+  profile?: Profile;
 }): Promise<{
   id: string;
   latest_invoice: {
@@ -358,6 +366,9 @@ export async function apiCreateSubscriptionWithPaymentMethod(params: {
     productId: params.productId,
     paymentProvider: 'stripe',
     promotionCode: params.promotionCode,
+    checkoutType: params.profile
+      ? CheckoutType.WITH_ACCOUNT
+      : CheckoutType.WITHOUT_ACCOUNT,
   };
   try {
     Amplitude.createSubscriptionWithPaymentMethod_PENDING(metricsOptions);

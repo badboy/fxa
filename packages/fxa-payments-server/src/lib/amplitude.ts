@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 import { AUTH_SERVER_ERRNOS_REVERSE_MAP } from 'fxa-shared/lib/errors';
+import {
+  CheckoutType,
+  IapSubscription,
+  MozillaSubscriptionTypes,
+} from 'fxa-shared/subscriptions/types';
 
 import { PaymentProvider } from '../lib/PaymentProvider';
 import { Store } from '../store';
@@ -32,6 +37,7 @@ const eventTypeNames = {
 
 type GlobalEventProperties = {
   uid?: string;
+  subscribed_plan_ids?: string;
 };
 
 export type EventProperties = GlobalEventProperties & {
@@ -46,7 +52,7 @@ export type EventProperties = GlobalEventProperties & {
   previous_product_id?: string;
   promotionCode?: string;
   error?: Error;
-  checkoutType?: string;
+  checkoutType?: CheckoutType;
   utm_campaign?: string;
   utm_content?: string;
   utm_medium?: string;
@@ -54,6 +60,7 @@ export type EventProperties = GlobalEventProperties & {
   utm_source?: string;
   utm_term?: string;
   other?: string;
+  subscriptionId?: string;
 };
 
 type SuccessfulSubscriptionEventProperties = EventProperties & {
@@ -85,18 +92,35 @@ export function addGlobalEventProperties(props: GlobalEventProperties) {
 
 export function subscribeToReduxStore(store: Store) {
   let unsubscribe: ReturnType<typeof store.subscribe>;
-  const uidObs = () => {
+  const obs = () => {
     const profile = selectors.profile(store.getState());
+    const subscriptions = selectors.customerSubscriptions(store.getState());
+
     if (
       profile?.result &&
       profile.result.uid &&
       profile.result.metricsEnabled !== false
     ) {
       addGlobalEventProperties({ uid: profile.result.uid });
-      unsubscribe?.();
     }
+
+    if (subscriptions) {
+      const subscribed_plan_ids = subscriptions
+        .map((sub) => {
+          if (sub._subscription_type === MozillaSubscriptionTypes.WEB) {
+            return sub.plan_id;
+          } else {
+            return (sub as IapSubscription).price_id;
+          }
+        })
+        .join(',');
+
+      addGlobalEventProperties({ subscribed_plan_ids: subscribed_plan_ids });
+    }
+
+    unsubscribe?.();
   };
-  unsubscribe = store.subscribe(uidObs);
+  unsubscribe = store.subscribe(obs);
 }
 
 // This should help ensure failure to log an Amplitude event doesn't

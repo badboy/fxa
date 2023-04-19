@@ -145,15 +145,13 @@ export const Checkout = ({
     [productId, planId, plansByProductId]
   );
 
-  const onFormMounted = useCallback(
-    () => Amplitude.createSubscriptionMounted(selectedPlan),
-    [selectedPlan]
-  );
+  const onFormMounted = useCallback(() => {
+    Amplitude.createSubscriptionMounted(selectedPlan);
+  }, [selectedPlan]);
 
-  const onFormEngaged = useCallback(
-    () => Amplitude.createSubscriptionEngaged(selectedPlan),
-    [selectedPlan]
-  );
+  const onFormEngaged = useCallback(() => {
+    Amplitude.createSubscriptionEngaged(selectedPlan);
+  }, [selectedPlan]);
 
   // clear any error rendered with `ErrorMessage` on form change
   const onChange = useCallback(() => {

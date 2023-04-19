@@ -30,6 +30,13 @@ export interface Plan {
   active: boolean;
   // TODO remove the '?' here when removing the SUBSCRIPTIONS_FIRESTORE_CONFIGS_ENABLED feature flag
   configuration?: PlanConfigurationDtoT | null;
+  checkoutType?: CheckoutType;
+  other?: any;
+}
+
+export enum CheckoutType {
+  WITH_ACCOUNT = 'with-account',
+  WITHOUT_ACCOUNT = 'without-account',
 }
 
 export type ConfiguredPlan = Stripe.Plan & {

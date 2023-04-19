@@ -9,7 +9,7 @@ import {
   StripeError,
 } from '@stripe/stripe-js';
 import { SubscriptionCreateAuthServerAPIs } from '../routes/Product/SubscriptionCreate';
-import { Customer, Plan } from '../store/types';
+import { Customer, Plan, Profile } from '../store/types';
 import {
   handlePasswordlessSignUp,
   PasswordlessSignupHandlerParam,
@@ -26,6 +26,7 @@ export type SubscriptionPaymentHandlerParam = {
   idempotencyKey: string;
   selectedPlan: Plan;
   customer: Customer | null;
+  profile: Profile | null;
   retryStatus: RetryStatus;
   promotionCode?: string;
   apiDetachFailedPaymentMethod: SubscriptionCreateAuthServerAPIs['apiDetachFailedPaymentMethod'];
@@ -48,6 +49,7 @@ export async function handlePasswordlessSubscription({
   idempotencyKey,
   selectedPlan,
   customer,
+  profile,
   retryStatus,
   promotionCode,
   apiCreateCustomer,
@@ -73,6 +75,7 @@ export async function handlePasswordlessSubscription({
       idempotencyKey,
       selectedPlan,
       customer,
+      profile,
       retryStatus,
       promotionCode,
       apiCreateCustomer,
@@ -95,6 +98,7 @@ export async function handleSubscriptionPayment({
   idempotencyKey,
   selectedPlan,
   customer,
+  profile,
   retryStatus,
   promotionCode,
   apiCreateCustomer,
@@ -113,6 +117,7 @@ export async function handleSubscriptionPayment({
         priceId: selectedPlan.plan_id,
         productId: selectedPlan.product_id,
         promotionCode: promotionCode,
+        profile: profile || undefined,
       });
     return handlePaymentIntent({
       customer,
@@ -171,6 +176,7 @@ export async function handleSubscriptionPayment({
         productId: selectedPlan.product_id,
         paymentMethodId: paymentMethod.id,
         promotionCode: promotionCode,
+        profile: profile || undefined,
       });
     return handlePaymentIntent({
       customer,
