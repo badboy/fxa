@@ -97,7 +97,11 @@ module.exports = (log, db, Password, verifierVersion, customs, mailer) => {
           );
         }
 
-        recordSecurityEvent('account.recovery_key_added', { db, request, account: {uid} });
+        recordSecurityEvent('account.recovery_key_added', {
+          db,
+          request,
+          account: { uid },
+        });
 
         return {};
       },
@@ -164,10 +168,17 @@ module.exports = (log, db, Password, verifierVersion, customs, mailer) => {
               emailOptions
             );
           }
-          recordSecurityEvent('account.recovery_key_challenge_success', { db, request, account: {uid} } )
-
+          recordSecurityEvent('account.recovery_key_challenge_success', {
+            db,
+            request,
+            account: { uid },
+          });
         } catch (err) {
-          recordSecurityEvent('account.recovery_key_challenge_failure', { db, request, account: {uid} }  )
+          recordSecurityEvent('account.recovery_key_challenge_failure', {
+            db,
+            request,
+            account: { uid },
+          });
           throw err;
         }
 
@@ -250,6 +261,66 @@ module.exports = (log, db, Password, verifierVersion, customs, mailer) => {
       },
     },
     {
+      method: 'GET',
+      path: '/recoveryKey/recoveryKeyHint',
+      options: {
+        ...RECOVERY_KEY_DOCS.RECOVERYKEY_HINT_GET,
+        // No auth needed to fetch the recovery key hint
+        auth: false,
+      },
+      handler: async function (request) {
+        log.begin('getRecoveryKeyHint', request);
+
+        const { uid } = request.auth.credentials;
+
+        const result = await db.recoveryKeyExists(uid);
+        if (!result.exists) {
+          throw errors.recoveryKeyNotFound();
+        }
+
+        const { recoveryKeyHint } = await db.getRecoveryKeyHint(uid);
+
+        return recoveryKeyHint;
+      },
+    },
+    {
+      method: 'POST',
+      path: '/recoveryKey/recoveryKeyHint',
+      options: {
+        ...RECOVERY_KEY_DOCS.RECOVERYKEY_HINT_POST,
+        auth: {
+          // hint update is only possible when authenticated
+          // from /session or (eventually) after signup, signin or successful password reset
+          strategy: 'sessionToken',
+        },
+        validate: {
+          payload: isA.object({
+            hint: validators.recoveryKeyHint,
+          }),
+        },
+      },
+      handler: async function (request) {
+        log.begin('updateRecoveryKeyHint', request);
+
+        const { uid, tokenVerificationId } = request.auth.credentials;
+
+        const { recoveryKeyHint } = request.payload;
+
+        if (tokenVerificationId) {
+          throw errors.unverifiedSession();
+        }
+
+        const result = await db.recoveryKeyExists(uid);
+        if (!result.exists) {
+          throw errors.recoveryKeyNotFound();
+        }
+
+        await db.updateRecoveryKeyHint(uid, recoveryKeyHint);
+
+        return {};
+      },
+    },
+    {
       method: 'DELETE',
       path: '/recoveryKey',
       options: {
@@ -268,7 +339,7 @@ module.exports = (log, db, Password, verifierVersion, customs, mailer) => {
         }
 
         await db.deleteRecoveryKey(uid);
-        recordSecurityEvent('account.recovery_key_removed', { db, request } )
+        recordSecurityEvent('account.recovery_key_removed', { db, request });
 
         const account = await db.account(uid);
 
@@ -291,7 +362,6 @@ module.exports = (log, db, Password, verifierVersion, customs, mailer) => {
           account,
           emailOptions
         );
-
 
         return {};
       },

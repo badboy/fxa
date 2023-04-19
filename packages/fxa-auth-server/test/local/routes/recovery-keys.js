@@ -14,20 +14,19 @@ let log, db, customs, mailer, routes, route, request, response;
 const email = 'test@email.com';
 const recoveryKeyId = '000000';
 const recoveryData = '11111111111';
+const recoveryKeyHint = 'super secret location';
 const uid = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
-
 
 let mockAccountEventsManager;
 
 describe('POST /recoveryKey', () => {
-
   beforeEach(() => {
     mockAccountEventsManager = mocks.mockAccountEventsManager();
-  })
+  });
 
   after(() => {
     mocks.unMockAccountEventsManager();
-  })
+  });
 
   describe('should create account recovery key', () => {
     let requestOptions;
@@ -55,9 +54,10 @@ describe('POST /recoveryKey', () => {
           name: 'account.recovery_key_added',
           ipAddr: '63.245.221.32',
           uid: requestOptions.credentials.uid,
-          tokenId: requestOptions.credentials.id
-        }));
-    })
+          tokenId: requestOptions.credentials.id,
+        })
+      );
+    });
 
     it('called log.begin correctly', () => {
       assert.equal(log.begin.callCount, 1);
@@ -155,7 +155,7 @@ describe('POST /recoveryKey', () => {
     });
     after(() => {
       mocks.unMockAccountEventsManager();
-    })
+    });
 
     it('returned the correct response', () => {
       assert.deepEqual(response, {});
@@ -213,14 +213,13 @@ describe('POST /recoveryKey', () => {
           name: 'account.recovery_key_challenge_success',
           ipAddr: '63.245.221.32',
           uid: uid,
-          tokenId: undefined
+          tokenId: undefined,
         })
       );
     });
   });
 
   describe('should not verify invalid account recovery key', () => {
-
     let error;
 
     beforeEach(() => {
@@ -228,18 +227,20 @@ describe('POST /recoveryKey', () => {
       const requestOptions = {
         credentials: { uid, email, tokenVerificationId: true },
         log,
-        payload: { recoveryKeyId:recoveryKeyId, enabled: false },
+        payload: { recoveryKeyId: recoveryKeyId, enabled: false },
       };
       return setup(
         { db: { email } },
         {},
         '/recoveryKey/verify',
         requestOptions
-      ).catch(e => {error = e});
+      ).catch((e) => {
+        error = e;
+      });
     });
     after(() => {
       mocks.unMockAccountEventsManager();
-    })
+    });
 
     it('records security event', () => {
       assert.isDefined(error);
@@ -250,63 +251,56 @@ describe('POST /recoveryKey', () => {
           name: 'account.recovery_key_challenge_failure',
           ipAddr: '63.245.221.32',
           uid: uid,
-          tokenId: undefined
+          tokenId: undefined,
         })
       );
     });
   });
 
-
   describe('should fail for unverified session', () => {
-
     beforeEach(() => {
       mockAccountEventsManager = mocks.mockAccountEventsManager();
-    })
+    });
 
     afterEach(() => {
       mocks.unMockAccountEventsManager();
-    })
+    });
 
     function makeUnverifiedReq() {
       const requestOptions = {
         credentials: { uid, email, tokenVerificationId: '1232311' },
       };
-      return setup({ db: {} }, {}, '/recoveryKey', requestOptions)
+      return setup({ db: {} }, {}, '/recoveryKey', requestOptions);
     }
 
     it('returned the correct response', () => {
-      makeUnverifiedReq().then(
-        assert.fail,
-        (err) => {
-          assert.deepEqual(
-            err.errno,
-            errors.ERRNO.SESSION_UNVERIFIED,
-            'returns unverified session error'
-          );
-        }
-      );
+      makeUnverifiedReq().then(assert.fail, (err) => {
+        assert.deepEqual(
+          err.errno,
+          errors.ERRNO.SESSION_UNVERIFIED,
+          'returns unverified session error'
+        );
+      });
     });
 
     it('records security event', () => {
-      makeUnverifiedReq().then(
-        assert.fail,
-        (err) => {
-          sinon.assert.calledWith(
-            mockAccountEventsManager.recordSecurityEvent,
-            sinon.match.defined,
-            sinon.match({
-              name: 'account.xxx',
-              ipAddr: '63.245.221.32',
-              uid: uid,
-              tokenId: undefined
-            }));
-          assert.deepEqual(
-            err.errno,
-            errors.ERRNO.SESSION_UNVERIFIED,
-            'returns unverified session error'
-          );
-        }
-      );
+      makeUnverifiedReq().then(assert.fail, (err) => {
+        sinon.assert.calledWith(
+          mockAccountEventsManager.recordSecurityEvent,
+          sinon.match.defined,
+          sinon.match({
+            name: 'account.xxx',
+            ipAddr: '63.245.221.32',
+            uid: uid,
+            tokenId: undefined,
+          })
+        );
+        assert.deepEqual(
+          err.errno,
+          errors.ERRNO.SESSION_UNVERIFIED,
+          'returns unverified session error'
+        );
+      });
     });
   });
 });
@@ -465,14 +459,13 @@ describe('POST /recoveryKey/exists', () => {
 });
 
 describe('DELETE /recoveryKey', () => {
-
   beforeEach(() => {
     mockAccountEventsManager = mocks.mockAccountEventsManager();
-  })
+  });
 
   afterEach(() => {
     mocks.unMockAccountEventsManager();
-  })
+  });
 
   describe('should delete account recovery key', () => {
     beforeEach(() => {
@@ -523,8 +516,9 @@ describe('DELETE /recoveryKey', () => {
           name: 'account.recovery_key_removed',
           ipAddr: '63.245.221.32',
           uid: uid,
-          tokenId: undefined
-        }));
+          tokenId: undefined,
+        })
+      );
     });
   });
 
@@ -546,13 +540,136 @@ describe('DELETE /recoveryKey', () => {
 
     after(() => {
       mocks.unMockAccountEventsManager();
-    })
+    });
 
     it('returned the correct response', () => {
       assert.equal(
         response.errno,
         errors.ERRNO.SESSION_UNVERIFIED,
         'unverified session'
+      );
+    });
+  });
+});
+
+describe('GET /recoveryKey/recoveryKeyHint', () => {
+  describe('should fail for unknown recovery key', () => {
+    beforeEach(() => {
+      const requestOptions = {
+        method: 'GET',
+        credentials: { uid, email },
+        log,
+      };
+      return setup(
+        { db: {} },
+        {},
+        '/recoveryKey/recoveryKeyHint',
+        requestOptions
+      ).then(assert.fail, (err) => (response = err));
+    });
+
+    it('returned the correct response', () => {
+      assert.equal(
+        response.errno,
+        errors.ERRNO.RECOVERY_KEY_NOT_FOUND,
+        'Account recovery key not found'
+      );
+    });
+  });
+
+  describe('should retrieve the recovery key hint', () => {
+    beforeEach(async () => {
+      const requestOptions = {
+        method: 'GET',
+        credentials: { uid, email },
+        log,
+      };
+      response = await setup(
+        { db: { recoveryData, recoveryKeyHint } },
+        {},
+        '/recoveryKey/recoveryKeyHint',
+        requestOptions
+      );
+    });
+
+    it('returned the correct response', () => {
+      assert.deepEqual(response, recoveryKeyHint);
+      sinon.assert.calledOnceWithExactly(db.getRecoveryKeyHint, uid);
+    });
+  });
+});
+
+describe('POST /recoveryKey/recoveryKeyHint', () => {
+  describe('should fail for unverified session', () => {
+    beforeEach(() => {
+      const requestOptions = {
+        method: 'POST',
+        credentials: { uid, email, tokenVerificationId: 'unverified' },
+        log,
+      };
+      return setup(
+        { db: {} },
+        {},
+        '/recoveryKey/recoveryKeyHint',
+        requestOptions
+      ).then(assert.fail, (err) => (response = err));
+    });
+
+    it('returned the correct response', () => {
+      assert.equal(
+        response.errno,
+        errors.ERRNO.SESSION_UNVERIFIED,
+        'unverified session'
+      );
+    });
+  });
+
+  describe('should fail for unknown recovery key', () => {
+    beforeEach(() => {
+      const requestOptions = {
+        method: 'POST',
+        credentials: { uid, email },
+        log,
+      };
+      return setup(
+        { db: {} },
+        {},
+        '/recoveryKey/recoveryKeyHint',
+        requestOptions
+      ).then(assert.fail, (err) => (response = err));
+    });
+
+    it('returned the correct response', () => {
+      assert.equal(
+        response.errno,
+        errors.ERRNO.RECOVERY_KEY_NOT_FOUND,
+        'Account recovery key not found'
+      );
+    });
+  });
+
+  describe('should update the recovery key hint', () => {
+    beforeEach(async () => {
+      const requestOptions = {
+        method: 'POST',
+        credentials: { uid, email },
+        payload: { recoveryKeyHint: recoveryKeyHint },
+        log,
+      };
+      response = await setup(
+        { db: { recoveryData } },
+        {},
+        '/recoveryKey/recoveryKeyHint',
+        requestOptions
+      );
+    });
+
+    it('returned the correct response', () => {
+      assert.deepEqual(response, {});
+      sinon.assert.calledOnceWithExactly(
+        db.updateRecoveryKeyHint,
+        uid,
+        recoveryKeyHint
       );
     });
   });

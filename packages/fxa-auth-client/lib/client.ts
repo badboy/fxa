@@ -1249,6 +1249,19 @@ export default class AuthClient {
     );
   }
 
+  async getRecoveryKeyHint() {
+    return this.request('GET', `/recoveryKey/recoveryKeyHint`);
+  }
+
+  async updateRecoveryKeyHint(
+    sessionToken: hexstring,
+    hint: string
+  ): Promise<{}> {
+    return this.sessionPost('/recoveryKey/recoveryKeyHint', sessionToken, {
+      hint,
+    });
+  }
+
   async resetPasswordWithRecoveryKey(
     accountResetToken: hexstring,
     email: string,

@@ -1061,6 +1061,21 @@ module.exports = (config, log, Token, UnblockCode = null) => {
     return RecoveryKey.update({ uid, recoveryKeyId, enabled });
   };
 
+  DB.prototype.getRecoveryKeyHint = async function (uid) {
+    log.trace('DB.getRecoveryKeyHint', { uid });
+    const data = await RecoveryKey.findByUid(uid);
+    if (!data) {
+      throw error.recoveryKeyNotFound();
+    }
+    return { recoveryKeyHint: await RecoveryKey.findHintByUid(uid) };
+  };
+
+  DB.prototype.updateRecoveryKeyHint = async function (uid, recoveryKeyHint) {
+    log.trace('DB.updateRecoveryKeyHint', { uid, recoveryKeyHint });
+
+    return RecoveryKey.updateRecoveryKeyHint({ uid, recoveryKeyHint });
+  };
+
   DB.prototype.deleteSessionTokenFromRedis = async function (uid, id) {
     if (!this.redis) {
       return;
