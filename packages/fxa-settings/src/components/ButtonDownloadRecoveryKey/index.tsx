@@ -86,12 +86,12 @@ export const ButtonDownloadRecoveryKey = ({
     const maxLength = 70;
     const prefix = 'Firefox-Recovery-Key';
     let email = primaryEmail.email;
-    let filename = `${prefix}_${date}_${email}`;
+    let filename = `${prefix}_${date}_${email}.txt`;
 
     if (filename.length > maxLength) {
       const lengthWithoutEmail = filename.length - email.length;
       email = email.slice(0, maxLength - lengthWithoutEmail);
-      filename = `${prefix}_${date}_${email}`;
+      filename = `${prefix}_${date}_${email}.txt`;
     }
     return filename;
   };

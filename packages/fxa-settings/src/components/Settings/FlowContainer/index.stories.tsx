@@ -36,9 +36,7 @@ export const WizardExample = () => {
       {currentStep === 1 && (
         <FlowContainer
           title="Example wizard flow"
-          {...{ currentStep, setCurrentStep }}
-          customBackButtonTitle="Previous page title"
-          customBackButtonLocalizationId="wizard-flow-back-button-title-first-step"
+          localizedCustomBackButtonTitle="Example wizard flow"
           onBackButtonClick={() => {
             window.history.back();
           }}
@@ -47,7 +45,7 @@ export const WizardExample = () => {
           <h2 className="font-bold text-xl mb-2">This is your first step.</h2>
           <p>You should click the button below to proceed to the next step.</p>
           <button
-            className="cta-primary cta-base-p m-2 flex-1"
+            className="cta-primary cta-base-p w-full"
             type="button"
             onClick={() => {
               setCurrentStep(currentStep + 1);
@@ -60,9 +58,7 @@ export const WizardExample = () => {
       {currentStep === 2 && (
         <FlowContainer
           title="Example wizard flow"
-          {...{ currentStep, setCurrentStep }}
-          customBackButtonTitle="Example wizard flow"
-          customBackButtonLocalizationId="wizard-flow-back-button-title-wizard-step"
+          localizedCustomBackButtonTitle="Example wizard flow"
           onBackButtonClick={() => {
             setCurrentStep(currentStep - 1);
           }}
@@ -86,12 +82,10 @@ export const WizardExample = () => {
         currentStep === 3 && (
           <FlowContainer
             title="Example wizard flow"
-            {...{ currentStep, setCurrentStep }}
+            localizedCustomBackButtonTitle="Example wizard flow"
             onBackButtonClick={() => {
               setCurrentStep(currentStep - 1);
             }}
-            customBackButtonTitle="Example wizard flow"
-            customBackButtonLocalizationId="wizard-flow-back-button-title-wizard-step"
           >
             <ProgressBar currentStep={3} numberOfSteps={3} />
             <h2 className="font-bold text-xl mb-2">This is the end! </h2>
