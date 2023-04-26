@@ -124,16 +124,7 @@ export const Checkout = ({
   const [paypalScriptLoaded, setPaypalScriptLoaded] = useState(false);
   const [subscribeToNewsletter, toggleSubscribeToNewsletter] = useState(false);
   const [newsletterSignupError, setNewsletterSignupError] = useState(false);
-
   const [coupon, setCoupon] = useState<CouponDetails>();
-
-  // Fetch plans on initial render or change in product ID
-  useEffect(() => {
-    fetchCheckoutRouteResources();
-  }, [fetchCheckoutRouteResources]);
-
-  usePaypalButtonSetup(config, setPaypalScriptLoaded, paypalButtonBase);
-
   const signInQueryParams = { ...queryParams, signin: 'yes' };
   const signInQueryParamString = Object.entries(signInQueryParams)
     .map(([k, v]) => `${k}=${v}`)
@@ -144,6 +135,61 @@ export const Checkout = ({
     () => getSelectedPlan(productId, planId, plansByProductId),
     [productId, planId, plansByProductId]
   );
+
+  // Fetch plans on initial render or change in product ID
+  useEffect(() => {
+    fetchCheckoutRouteResources();
+  }, [fetchCheckoutRouteResources]);
+
+  usePaypalButtonSetup(config, setPaypalScriptLoaded, paypalButtonBase);
+
+  useEffect(() => {
+    if (document.readyState === 'complete') {
+      const container = document.getElementById('checkout-form-container');
+
+      // get interactive child elements
+      if (container) {
+        const inputs = container.querySelectorAll('input');
+        const iframes = container.querySelectorAll('iframe');
+
+        const submitButton = container.querySelector(
+          'button[data-testid="submit"]'
+        );
+
+        const children = [] as any[];
+
+        if (inputs.length > 0) {
+          children.concat(Array.from(inputs));
+        }
+        if (iframes.length > 0) {
+          children.concat(Array.from(iframes));
+        }
+        if (submitButton) {
+          children.concat(submitButton);
+        }
+
+        children.forEach((childEl) => {
+          !checkboxSet
+            ? childEl.setAttribute('tabIndex', -1)
+            : childEl.removeAttribute('tabIndex');
+        });
+      }
+    }
+  }, [checkboxSet]);
+
+  const handleClick = () => {
+    if (!checkboxSet) {
+      setShowTooltip(true);
+    }
+  };
+
+  const handleKeyPress = (ev: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!checkboxSet && ev.key !== 'Tab') {
+      ev.preventDefault();
+
+      setShowTooltip(true);
+    }
+  };
 
   const onFormMounted = useCallback(
     () => Amplitude.createSubscriptionMounted(selectedPlan),
@@ -213,20 +259,6 @@ export const Checkout = ({
       subscribeToNewsletter,
     ]
   );
-
-  const handleClick = () => {
-    if (!checkboxSet) {
-      setShowTooltip(true);
-    }
-  };
-
-  const handleKeyPress = (ev: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!checkboxSet && ev.key !== 'Tab') {
-      ev.preventDefault();
-
-      setShowTooltip(true);
-    }
-  };
 
   const postSubscriptionAttemptPaypalCallback = useCallback(async () => {
     await fetchProfileAndCustomer();
@@ -425,6 +457,7 @@ export const Checkout = ({
           />
 
           <div
+            id="checkout-form-container"
             data-testid="payment-form-container"
             className={`mt-8${!checkboxSet ? ' payment-form-disabled' : ''}`}
             tabIndex={!checkboxSet ? 0 : undefined}
