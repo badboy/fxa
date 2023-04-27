@@ -4,9 +4,9 @@
 
 import {
   Link,
-  navigate,
   RouteComponentProps,
   useLocation,
+  useNavigate,
 } from '@reach/router';
 import React, { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -59,6 +59,7 @@ const AccountRecoveryConfirmKey = (_: RouteComponentProps) => {
   const { linkStatus, setLinkStatus, requiredParams } =
     useAccountRecoveryConfirmKeyLinkStatus();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const { handleSubmit, register } = useForm<FormData>({
     mode: 'onBlur',
@@ -74,6 +75,11 @@ const AccountRecoveryConfirmKey = (_: RouteComponentProps) => {
       setIsFocused(true);
     }
   };
+
+  const errorInvalidRecoveryKey = ftlMsgResolver.getMsg(
+    'account-recovery-confirm-key-error-general',
+    'Invalid account recovery key'
+  );
 
   const getRecoveryBundleAndNavigate = useCallback(
     async ({
@@ -110,7 +116,7 @@ const AccountRecoveryConfirmKey = (_: RouteComponentProps) => {
         },
       });
     },
-    [account]
+    [account, navigate]
   );
 
   const checkRecoveryKey = useCallback(
@@ -145,11 +151,7 @@ const AccountRecoveryConfirmKey = (_: RouteComponentProps) => {
           // key, and note that all other errors are unexpected. However in practice,
           // users could also trigger an 'invalid hex string: null' message. We may want to
           // circle back to this but for now serves as a catch-all for other errors.
-          const errorAccountRecoveryConfirmKey = ftlMsgResolver.getMsg(
-            'account-recovery-confirm-key-error-general',
-            'Invalid account recovery key'
-          );
-          setRecoveryKeyErrorText(errorAccountRecoveryConfirmKey);
+          setRecoveryKeyErrorText(errorInvalidRecoveryKey);
         }
       } finally {
         setIsLoading(false);
@@ -160,24 +162,32 @@ const AccountRecoveryConfirmKey = (_: RouteComponentProps) => {
       fetchedResetToken,
       getRecoveryBundleAndNavigate,
       setLinkStatus,
-      ftlMsgResolver,
+      errorInvalidRecoveryKey,
     ]
   );
 
-  const onSubmit = ({ recoveryKey, token, code, email, uid }: SubmitData) => {
+  const invalidRecoveryKeyLength = (localizedError: string) => {
+    setRecoveryKeyErrorText(localizedError);
+    setIsLoading(false);
+    logViewEvent('flow', `${viewName}.fail`, REACT_ENTRYPOINT);
+  };
+
+  const onSubmit = (submitData: SubmitData) => {
     setIsLoading(true);
     logViewEvent('flow', `${viewName}.submit`, REACT_ENTRYPOINT);
-    if (recoveryKey === '') {
-      const errorEmptyRecoveryKeyInput = ftlMsgResolver.getMsg(
-        'account-recovery-confirm-key-empty-input-error',
-        'Account recovery key required'
-      );
-      setRecoveryKeyErrorText(errorEmptyRecoveryKeyInput);
-      setIsLoading(false);
-      return;
-    }
 
-    checkRecoveryKey({ recoveryKey, token, code, email, uid });
+    if (submitData.recoveryKey === '') {
+      invalidRecoveryKeyLength(
+        ftlMsgResolver.getMsg(
+          'account-recovery-confirm-key-empty-input-error',
+          'Account recovery key required'
+        )
+      );
+    } else if (submitData.recoveryKey.length !== 32) {
+      invalidRecoveryKeyLength(errorInvalidRecoveryKey);
+    } else {
+      checkRecoveryKey(submitData);
+    }
   };
 
   if (linkStatus === LinkStatus.damaged || requiredParams === null) {
@@ -249,10 +259,13 @@ const AccountRecoveryConfirmKey = (_: RouteComponentProps) => {
             anchorStart
             autoComplete="off"
             spellCheck={false}
+            onChange={() => {
+              setRecoveryKeyErrorText('');
+            }}
             prefixDataTestId="account-recovery-confirm-key"
-            inputRef={register({
-              required: true,
-            })}
+            // We don't have this marked as 'required: true` because we want to validate
+            // on submit, not on blur
+            inputRef={register()}
           />
         </FtlMsg>
 
