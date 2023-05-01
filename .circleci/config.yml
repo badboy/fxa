@@ -28,7 +28,21 @@ parameters:
   force-deploy-fxa-ci-images:
     type: boolean
     default: false
-
+  accounts-domain:
+    type: string
+    default: accounts.firefox.com
+  payments-domain:
+    type: string
+    default: subscriptions.firefox.com
+  accounts-api-domain:
+    type: string
+    default: api.accounts.firefox.com
+  relier-domain:
+    type: string
+    default: stage-123done.herokuapp.com
+  untrusted-relier-domain:
+    type: string
+    default: stage-123done-untrusted.herokuapp.com
 
 orbs:
   browser-tools: circleci/browser-tools@1.2.3
@@ -279,6 +293,11 @@ commands:
           environment:
             CIRCLE_NODE_INDEX: << parameters.index >>
             CIRCLE_NODE_TOTAL: << parameters.total >>
+            ACCOUNTS_DOMAIN: << pipeline.parameters.accounts-domain >>
+            PAYMENTS_DOMAIN: << pipeline.parameters.payments-domain >>
+            ACCOUNTS_API_DOMAIN: << pipeline.parameters.accounts-api-domain >>
+            RELIER_DOMAIN: << pipeline.parameters.relier-domain >>
+            UNTRUSTED_RELIER_DOMAIN: << pipeline.parameters.untrusted-relier-domain >>
           command: ./packages/fxa-content-server/scripts/test-ci-remote.sh
       - store-artifacts
 
@@ -633,6 +652,12 @@ jobs:
       - provision
       - run:
           name: Running smoke tests
+          environment:
+            ACCOUNTS_DOMAIN: << pipeline.parameters.accounts-domain >>
+            PAYMENTS_DOMAIN: << pipeline.parameters.payments-domain >>
+            ACCOUNTS_API_DOMAIN: << pipeline.parameters.accounts-api-domain >>
+            RELIER_DOMAIN: << pipeline.parameters.relier-domain >>
+            UNTRUSTED_RELIER_DOMAIN: << pipeline.parameters.untrusted-relier-domain >>
           command: yarn workspace functional-tests test-production
       - store-artifacts
       # TODO: Is this actually needed?
@@ -650,6 +675,12 @@ jobs:
       - provision
       - run:
           name: Running smoke tests
+          environment:
+            ACCOUNTS_DOMAIN: << pipeline.parameters.accounts-domain >>
+            PAYMENTS_DOMAIN: << pipeline.parameters.payments-domain >>
+            ACCOUNTS_API_DOMAIN: << pipeline.parameters.accounts-api-domain >>
+            RELIER_DOMAIN: << pipeline.parameters.relier-domain >>
+            UNTRUSTED_RELIER_DOMAIN: << pipeline.parameters.untrusted-relier-domain >>
           command: yarn workspace functional-tests << parameters.target >>
       - store-artifacts
 
