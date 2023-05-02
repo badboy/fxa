@@ -533,6 +533,45 @@ describe('metrics/amplitude', () => {
       });
     });
 
+    describe('customer.subscription.deleted', () => {
+      beforeEach(() => {
+        return amplitude(
+          'customer.subscription.deleted',
+          mocks.mockRequest({
+            payload: {
+              metricsContext: {
+                payment_provider: 'stripe',
+                plan_id: 'bar',
+                product_id: 'foo',
+                provider_event_id: 'eventId',
+                subscription_id: 'subscriptionId',
+                voluntary_cancellation: true,
+              },
+            },
+          }),
+          {},
+          {}
+        );
+      });
+
+      it('did not call log.error', () => {
+        assert.equal(log.error.callCount, 0);
+      });
+
+      it('called log.amplitudeEvent correctly', () => {
+        assert.equal(log.amplitudeEvent.callCount, 1);
+        const args = log.amplitudeEvent.args[0];
+        assert.deepEqual(args[0].event_properties, {
+          payment_provider: 'stripe',
+          plan_id: 'planId',
+          product_id: 'productId',
+          provider_event_id: 'eventId',
+          subscription_id: 'subscriptionId',
+          voluntary_cancellation: true,
+        });
+      });
+    });
+
     describe('flow.complete (sign-up)', () => {
       beforeEach(() => {
         return amplitude(

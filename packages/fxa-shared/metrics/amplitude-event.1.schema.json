@@ -93,6 +93,11 @@
           "description": "The OAuth client ID for a RP integrated with FxA.",
           "type": "string"
         },
+        "payment_provider": {
+          "description": "The third party service ultimately processing a user’s payments (i.e. one of: Stripe, PayPal, Google or Apple at the time of writing).",
+          "type": "string",
+          "maxLength": 128
+        },
         "plan_id": {
           "description": "Plan ID of a subscription.",
           "type": "string",
@@ -102,6 +107,20 @@
           "description": "Product ID of a subscription.",
           "type": "string",
           "maxLength": 128
+        },
+        "provider_event_id": {
+          "description": "A unique identifier for the subscription notification from a payment provider. For Stripe and Stripe-managed providers like PayPal, this is the Stripe webhook event id. This will be used to deduplicate notifications that may have been sent multiple times by the payment provider.",
+          "type": "string",
+          "maxLength": 128
+        },
+        "subscription_id": {
+          "description": "ID of a subscription being canceled.",
+          "type": "string",
+          "maxLength": 128
+        },
+        "voluntary_cancellation": {
+          "description": "True if the cancelation was a Voluntary Cancelation else false for an Involuntary Cancelation.",
+          "type": "boolean"
         }
       }
     },

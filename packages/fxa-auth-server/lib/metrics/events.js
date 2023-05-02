@@ -16,6 +16,7 @@ const ACTIVITY_EVENTS = new Set([
   'account.reset',
   'account.signed',
   'account.verified',
+  'customer.subscription.deleted',
   'device.created',
   'device.deleted',
   'device.updated',

@@ -44,6 +44,7 @@ const GROUPS = {
   subPaySubChange: 'fxa_pay_subscription_change',
   subSupport: 'fxa_subscribe_support',
   subCoupon: 'fxa_subscribe_coupon',
+  subEnded: 'fxa_subscription_ended',
   thirdPartyAuth: 'fxa_third_party_auth',
   qrConnectDevice: 'fxa_qr_connect_device',
 };
@@ -76,6 +77,7 @@ const EVENT_PROPERTIES = {
   [GROUPS.subPaySubChange]: mapSubscriptionChangeEventProperties,
   [GROUPS.subSupport]: NOP,
   [GROUPS.subCoupon]: NOP,
+  [GROUPS.subEnded]: NOP,
   [GROUPS.qrConnectDevice]: NOP,
   [GROUPS.thirdPartyAuth]: NOP,
 };
@@ -403,6 +405,9 @@ export const amplitude = {
           product_id: data.productId || data.product_id,
           payment_provider: data.paymentProvider,
           promotionCode: data.promotionCode,
+          provider_event_id: data.event_id,
+          subscription_id: data.subscription_id,
+          // voluntary_cancellation:
         }),
         EVENT_PROPERTIES[eventGroup](
           eventType,

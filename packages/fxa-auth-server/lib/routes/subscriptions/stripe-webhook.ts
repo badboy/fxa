@@ -465,6 +465,19 @@ export class StripeWebhookHandler extends StripeHandler {
       if (this.paypalHelper) {
         await this.paypalHelper.conditionallyRemoveBillingAgreement(customer);
       }
+
+      const plan = event.data.object as Stripe.Plan;
+      const product = await this.stripeHelper.fetchProductById(
+        plan.product as string
+      );
+      await request.emitMetricsEvent('customer.subscription.deleted', {
+        payment_provider: this.stripeHelper.getPaymentProvider(customer),
+        plan_id: plan.id,
+        product_id: product?.id,
+        provider_event_id: event.id,
+        subscription_id: sub.id,
+        // voluntary_cancellation:,
+      });
     } catch (err) {
       // FIXME: If the customer was deleted, we don't send an email that their subscription
       //        was cancelled. This is because the email requires a bunch of details that

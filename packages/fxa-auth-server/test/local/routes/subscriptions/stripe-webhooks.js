@@ -1105,6 +1105,28 @@ describe('StripeWebhookHandler', () => {
           customerFixture
         );
       });
+
+      it('called request.emitMetricsEvent correctly', () => {
+        assert.calledOnce(log.activityEvent);
+        const args = log.activityEvent.args[0];
+        assert.equal(
+          args.length,
+          1,
+          'log.activityEvent was passed one argument'
+        );
+        assert.calledOnce(log.flowEvent);
+        assert.equal(
+          log.flowEvent.args[0][0].event,
+          'customer.subscription.deleted',
+          'event was event customer.subscription.deleted'
+        );
+        assert.equal(args[0].payment_provider, 'paymentProvider');
+        assert.equal(args[0].plan_id, 'planId');
+        assert.equal(args[0].product_id, 'productId');
+        assert.equal(args[0].provider_event_id, 'eventId');
+        assert.equal(args[0].subscription_id, 'subId');
+        assert.equal(args[0].voluntary_cancellation, 'voluntaryCancellation');
+      });
     });
 
     describe('handleInvoiceCreatedEvent', () => {

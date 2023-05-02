@@ -108,6 +108,10 @@ const EVENTS = {
     group: GROUPS.registration,
     event: 'email_confirmed',
   },
+  'customer.subscription.deleted': {
+    group: GROUPS.subEnded,
+    event: 'fxa_subscription_ended',
+  },
   'oauth.token.created': {
     group: GROUPS.activity,
     event: 'oauth_access_token_created',
