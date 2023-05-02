@@ -12,3 +12,5 @@ confirm-signup-aria-label =
   .aria-label = An envelope containing a link
 security-shield-aria-label =
   .aria-label = Illustration to represent an account recovery key.
+lightbulb-aria-label =
+  .aria-label = Illustration to represent creating a storage hint.
