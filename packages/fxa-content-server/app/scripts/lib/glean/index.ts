@@ -5,11 +5,8 @@
 import Glean from '@mozilla/glean/web';
 
 import { accountsEvents } from './pings';
-import { name } from './event';
-import { userIdSha256 } from './account';
-import { oauthClientId, service } from './relyingParty';
-import { deviceType, entrypoint, flowId } from './session';
-import * as utm from './utm';
+import * as registration from './registration';
+import * as login from './login';
 
 export type GleanMetricsConfig = {
   enabled: boolean;
@@ -35,30 +32,33 @@ let gleanMetricsContext;
 const populateProperties = () => {
   const flowEventMetadata = gleanMetricsContext.metrics.getFlowEventMetadata();
 
-  // TODO when sending metrics for authenticated accounts
-  userIdSha256.set('');
+  const extras = {
+    // TODO when sending metrics for authenticated accounts
+    userIdSha256: ''
+    relyingPartyOauthClientId: gleanMetricsContext.relier.get('clientId') || '',
+    relyingPartyService: gleanMetricsContext.relier.get('service') || '',
 
-  oauthClientId.set(gleanMetricsContext.relier.get('clientId') || '');
-  service.set(gleanMetricsContext.relier.get('service') || '');
+    sessionDeviceType: gleanMetricsContext.userAgent.genericDeviceType() || '',
+    sessionEntrypoint: flowEventMetadata.entrypoint || '',
+    sessionFlowId: flowEventMetadata.flowId || '',
 
-  deviceType.set(gleanMetricsContext.userAgent.genericDeviceType() || '');
-  entrypoint.set(flowEventMetadata.entrypoint || '');
-  flowId.set(flowEventMetadata.flowId || '');
+    utmCampaign: flowEventMetadata.utmCampaign || '',
+    utmContent: flowEventMetadata.utmContent || '',
+    utmMedium: flowEventMetadata.utmMedium || '',
+    utmSource: flowEventMetadata.utmSource || '',
+    utmTerm: flowEventMetadata.utmTerm || '',
 
-  utm.campaign.set(flowEventMetadata.utmCampaign || '');
-  utm.content.set(flowEventMetadata.utmContent || '');
-  utm.medium.set(flowEventMetadata.utmMedium || '');
-  utm.source.set(flowEventMetadata.utmSource || '');
-  utm.term.set(flowEventMetadata.utmTerm || '');
+  };
+  return extras;
 };
 
-const createEventFn = (eventName) => () => {
+const createEventFn = (event) => () => {
   if (!gleanEnabled) {
     return;
   }
 
-  name.set(eventName);
-  populateProperties();
+  const extras = populateProperties();
+  event.record(extras);
   accountsEvents.submit();
 };
 
@@ -89,15 +89,15 @@ export const GleanMetrics = {
   },
 
   registration: {
-    view: createEventFn('reg_view'),
-    submit: createEventFn('reg_submit'),
-    success: createEventFn('reg_submit_success'),
+    view: createEventFn(registration.view),
+    submit: createEventFn(registration.submit),
+    success: createEventFn(registration.submitSuccess),
   },
 
   login: {
-    view: createEventFn('login_view'),
-    submit: createEventFn('login_submit'),
-    success: createEventFn('login_submit_success'),
+    view: createEventFn(login.view),
+    submit: createEventFn(login.submit),
+    success: createEventFn(login.submitSuccess),
   },
 };
 
